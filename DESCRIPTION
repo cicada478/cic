@@ -1,0 +1,14 @@
+Package: cic
+Title: Personal Utilities for Single-Cell Data Analysis
+Version: 0.2.0
+Authors@R: person("Cicada", email = "cicada_7x@163.com",
+    role = c("aut", "cre"))
+Description: A collection of personal utilities for single-cell sequencing
+    data analysis. Provides a common output-path policy, output logging, and
+    convenient plot export with protection against accidental file overwrites.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Imports:
+    ggplot2,
+    tools,
+    utils

@@ -1,0 +1,16 @@
+.Rhistory
+.RData
+.Ruserdata
+.Renviron
+.env
+.env.*
+!.env.example
+.Rproj.user/
+.cic_outputs.csv
+*.log
+*.Rcheck/
+.DS_Store
+Thumbs.db
+.local-library/
+cic.Rcheck/
+cic_*.tar.gz

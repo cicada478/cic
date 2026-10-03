@@ -1,0 +1,9 @@
+^plot_utils\.R$
+^cic_.*\.tar\.gz$
+^cic\.Rcheck$
+^\.local-library$
+^\.gitignore$
+^\.git$
+^LICENSE\.md$
+^\.github$
+^README\.en\.md$
