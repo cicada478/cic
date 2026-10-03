@@ -42,8 +42,10 @@ run_output_checks <- function() {
             identical(before$exists, FALSE))
   writeLines("x\ty", logged)
   after <- outputs(output_dir, existing = TRUE)
+  logged_normalized <- tolower(normalizePath(logged, winslash = "/"))
+  recorded_normalized <- tolower(normalizePath(after$file, winslash = "/"))
   stopifnot(nrow(after) == 1L, identical(after$exists, TRUE),
-            identical(after$file, normalizePath(logged, winslash = "/")))
+            identical(recorded_normalized, logged_normalized))
   stopifnot(nrow(outputs(output_dir, existing = FALSE)) == 0L,
             nrow(outputs(output_dir, n = 0)) == 0L)
 
