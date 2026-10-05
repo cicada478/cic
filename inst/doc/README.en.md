@@ -6,9 +6,11 @@
 applies one naming policy to RDS, CSV, PDF, PNG, QS2, and other files: add a
 date, prevent silent overwrites, and keep a queryable allocation log.
 
-This document describes development version `0.2.0`. `cic` only handles paths
+This document describes development version `0.3.0`. `cic` only handles paths
 passed explicitly to `out()` or `ggsave1()`; it does not monitor the filesystem
 or rename package caches and temporary files.
+Starting with 0.3.0, path operations use `fs` as an internal backend; naming,
+collision, and logging policies remain defined by `cic`.
 
 ## Repository migration
 
@@ -44,7 +46,7 @@ install.packages("remotes")
 remotes::install_github("cicada478/cic")
 ```
 
-After `v0.2.0` is released, install that exact version with:
+The current stable release is `v0.2.0`. Install that exact version with:
 
 ```r
 remotes::install_github("cicada478/cic@v0.2.0")
@@ -64,11 +66,11 @@ Download `SHA256SUMS` from the same Release and run
 `sha256sum -c SHA256SUMS`. On Windows PowerShell, compare it with
 `Get-FileHash cic_0.2.0.tar.gz -Algorithm SHA256`.
 
-For a local source checkout, install `ggplot2` and then run this from the
-repository root:
+For a local source checkout, install `fs` and `ggplot2`, then run this from
+the repository root:
 
 ```r
-install.packages("ggplot2")
+install.packages(c("fs", "ggplot2"))
 install.packages(".", repos = NULL, type = "source")
 ```
 
@@ -205,6 +207,18 @@ ggsave1("scatter.pdf", p, confirm = FALSE, add_date = FALSE)
 `ggsave1()` invisibly returns the final path and shares `out()`'s timestamp,
 collision, directory, and logging behavior.
 
+## 0.3.0 path backend
+
+Starting with 0.3.0, `cic` uses `fs` for path decomposition, extensions,
+existence checks, directory creation, and internal log paths. `fs` remains an
+implementation detail: `out()` still returns a plain character value and
+preserves 0.2.0's caller-visible path representation, dotfile naming,
+collision policies, options, and log columns.
+
+This change does not make allocation a file lock and does not monitor writes
+performed by other packages. Concurrent writers still require external
+synchronization or distinct tags.
+
 ## Limitations and compatibility
 
 - `out()` allocates a path before the writer runs; use `outputs()` to verify
@@ -213,7 +227,7 @@ collision, directory, and logging behavior.
   the same name need separate synchronization or worker-specific tags.
 - Logs live beside their outputs. Without `cic.out.dir`, pass a non-current
   output directory to `outputs()` explicitly.
-- Local validation used Windows 11, R 4.4.1, and ggplot2 4.0.3. CI is configured
+- Local validation used Windows 11, R 4.4.1, fs 2.1.0, and ggplot2 4.0.3. CI is configured
   to run the current R release on Windows and Ubuntu. Consult GitHub Actions for
   observed results; this is not a compatibility guarantee for every R or OS
   version.
@@ -224,11 +238,11 @@ From the repository root:
 
 ```sh
 R CMD build .
-R CMD check --no-manual cic_0.2.0.tar.gz
+R CMD check --no-manual cic_0.3.0.tar.gz
 ```
 
 The check runs examples, `tests/output.R`, and `tests/ggsave1.R`. The current
-0.2.0 candidate produced `Status: OK` in the local environment above.
+0.3.0 candidate produced `Status: OK` in the local environment above.
 
 See [the English release notes](NEWS.en.md) for release changes. Report
 problems through

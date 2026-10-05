@@ -16,8 +16,22 @@ run_output_checks <- function() {
     output_dir,
     paste0("fibroblast_final_dpw7_", format(Sys.Date(), "%Y%m%d"), ".rds")
   )
-  stopifnot(identical(result$value, expected), !result$visible,
+  stopifnot(identical(result$value, expected),
+            is.character(result$value), !inherits(result$value, "fs_path"),
+            !result$visible,
             dir.exists(output_dir))
+
+  unicode_path <- file.path(output_dir, "结果 空格", "细胞图.csv")
+  unicode_result <- out(unicode_path, timestamp = FALSE, log = FALSE)
+  stopifnot(identical(unicode_result, unicode_path),
+            is.character(unicode_result),
+            !inherits(unicode_result, "fs_path"),
+            dir.exists(dirname(unicode_path)))
+
+  hidden <- file.path(output_dir, ".hidden")
+  hidden_result <- out(hidden, tag = "final", timestamp = FALSE, log = FALSE)
+  stopifnot(identical(hidden_result,
+                      file.path(output_dir, "_final.hidden")))
 
   fixed <- file.path(output_dir, "markers.csv")
   writeLines("original", fixed)
@@ -65,6 +79,10 @@ run_output_checks <- function() {
   expect_error(out("x", timestamp = "%Y/%m"), "path separators")
   expect_error(out(file.path(output_dir, "missing", "x"), timestamp = FALSE,
                    create_dir = FALSE), "does not exist")
+  blocked_parent <- file.path(output_dir, "not-a-directory")
+  writeLines("file", blocked_parent)
+  expect_error(out(file.path(blocked_parent, "x.csv"), timestamp = FALSE,
+                   log = FALSE), "Cannot create output directory")
   expect_error(outputs(output_dir, existing = 1), "existing")
   expect_error(outputs(output_dir, n = 1.5), "whole number")
 }

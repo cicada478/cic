@@ -6,8 +6,10 @@
 输出，为 RDS、CSV、PDF、PNG、QS2 等结果添加日期、防止静默覆盖，并记录
 可查询的输出日志。
 
-本文档对应开发版本 `0.2.0`。`cic` 只处理显式传给 `out()` 或 `ggsave1()`
+本文档对应开发版本 `0.3.0`。`cic` 只处理显式传给 `out()` 或 `ggsave1()`
 的路径，不监听文件系统，因此不会改写其他包的 cache、临时文件或中间文件。
+从 0.3.0 起，路径操作统一使用 `fs` 作为内部后端；命名、冲突和日志策略仍由
+`cic` 定义。
 
 ## 仓库迁移说明
 
@@ -40,7 +42,7 @@ install.packages("remotes")
 remotes::install_github("cicada478/cic")
 ```
 
-发布 `v0.2.0` 后，可固定安装该版本：
+当前稳定版为 `v0.2.0`，可固定安装该版本：
 
 ```r
 remotes::install_github("cicada478/cic@v0.2.0")
@@ -60,10 +62,10 @@ install.packages(
 `sha256sum -c SHA256SUMS`；Windows PowerShell 用户也可以用
 `Get-FileHash cic_0.2.0.tar.gz -Algorithm SHA256` 对照检查。
 
-从本地源码安装时，需要先安装 `ggplot2`，再在仓库根目录运行：
+从本地源码安装时，需要先安装 `fs` 和 `ggplot2`，再在仓库根目录运行：
 
 ```r
-install.packages("ggplot2")
+install.packages(c("fs", "ggplot2"))
 install.packages(".", repos = NULL, type = "source")
 ```
 
@@ -221,6 +223,15 @@ ggsave1("scatter.pdf", p, confirm = FALSE, add_date = FALSE)
 `ggsave1()` 会不可见地返回实际保存路径，并与 `out()` 共用日期、重名保护、
 目录创建和日志机制。
 
+## 0.3.0 路径后端
+
+从 0.3.0 起，`cic` 使用 `fs` 统一处理路径解析、扩展名、存在性检查、目录创建
+和内部日志路径。`fs` 是实现细节：`out()` 仍返回普通 character，且保留 0.2.0
+的调用者可见路径表示、隐藏文件命名、冲突策略、options 和日志列。
+
+这一变化不会把路径分配变成文件锁，也不会监听其他包的文件写入。并行 writer
+仍需要外部同步或各自不同的 `tag`。
+
 ## 限制与安全边界
 
 - `out()` 分配路径时，实际保存尚未发生；使用 `outputs()` 检查文件最终是否产生。
@@ -228,7 +239,7 @@ ggsave1("scatter.pdf", p, confirm = FALSE, add_date = FALSE)
   或使用 worker 特定的 `tag`。
 - 日志按输出目录保存；未设置 `cic.out.dir` 时，查询非当前目录需要将目录传给
   `outputs()`。
-- 本地验证环境为 Windows 11、R 4.4.1、ggplot2 4.0.3。仓库 CI 配置为在
+- 本地验证环境为 Windows 11、R 4.4.1、fs 2.1.0、ggplot2 4.0.3。仓库 CI 配置为在
   Windows 和 Ubuntu 的当前 R release 上执行检查；具体结果以 GitHub Actions
   为准，这不构成对所有 R 或操作系统版本的兼容性承诺。
 
@@ -238,10 +249,10 @@ ggsave1("scatter.pdf", p, confirm = FALSE, add_date = FALSE)
 
 ```sh
 R CMD build .
-R CMD check --no-manual cic_0.2.0.tar.gz
+R CMD check --no-manual cic_0.3.0.tar.gz
 ```
 
-检查会运行帮助示例、`tests/output.R` 和 `tests/ggsave1.R`。当前 `0.2.0`
+检查会运行帮助示例、`tests/output.R` 和 `tests/ggsave1.R`。当前 `0.3.0`
 候选版本在上述本地环境中的结果为：
 
 ```text

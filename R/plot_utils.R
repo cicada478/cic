@@ -41,6 +41,7 @@ ggsave1 <- function(filename, plot = ggplot2::last_plot(), ...,
         is.na(args$path)) {
       stop("`path` must be a single character string or NULL.", call. = FALSE)
     }
+    # Keep the exact character representation returned by earlier releases.
     filename <- file.path(args$path, filename)
     args$path <- NULL
   }
@@ -53,9 +54,27 @@ ggsave1 <- function(filename, plot = ggplot2::last_plot(), ...,
 }
 
 # Internal filename helpers; not exported.
+output_path_ext <- function(filename) {
+  ext <- fs::path_ext(filename)
+  leaf <- fs::path_file(filename)
+
+  # tools::file_ext(), used through cic 0.2.0, treats a lone dotfile such as
+  # `.hidden` as extension `hidden`. Preserve that public naming behavior while
+  # using fs for path decomposition everywhere else.
+  if (!nzchar(ext) && grepl("^\\.[^.]+$", leaf)) {
+    sub("^\\.", "", leaf)
+  } else {
+    ext
+  }
+}
+
 add_filename_suffix <- function(filename, suffix) {
-  ext <- tools::file_ext(filename)
-  base <- tools::file_path_sans_ext(filename)
+  ext <- output_path_ext(filename)
+  base <- if (nzchar(ext)) {
+    substr(filename, 1L, nchar(filename) - nchar(ext) - 1L)
+  } else {
+    filename
+  }
   paste0(base, suffix, if (nzchar(ext)) paste0(".", ext) else "")
 }
 
@@ -63,7 +82,7 @@ auto_rename <- function(filename) {
   i <- 1L
   repeat {
     newname <- add_filename_suffix(filename, paste0("_", i))
-    if (!file.exists(newname)) return(newname)
+    if (!fs::file_exists(newname)) return(as.character(newname))
     i <- i + 1L
   }
 }

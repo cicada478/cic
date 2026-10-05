@@ -40,6 +40,9 @@ out <- function(path, ext = NULL, tag = NULL,
 
   if (!is.null(dir)) {
     assert_scalar_string(dir, "dir")
+    # Preserve the caller-visible lexical form used by cic 0.2.0. `fs` is the
+    # filesystem backend, but normalizing separators here would change the
+    # character value returned on Windows.
     path <- file.path(dir, path)
   }
 
@@ -49,12 +52,14 @@ out <- function(path, ext = NULL, tag = NULL,
     if (!nzchar(ext) || grepl("[/\\\\]", ext)) {
       stop("`ext` must be a filename extension, not a path.", call. = FALSE)
     }
-    current_ext <- tools::file_ext(path)
+    current_ext <- output_path_ext(path)
     if (nzchar(current_ext) && !identical(tolower(current_ext), tolower(ext))) {
       stop("`path` already has extension .", current_ext,
            "; remove it or use `ext = \"", current_ext, "\"`.", call. = FALSE)
     }
-    if (!nzchar(current_ext)) path <- paste0(path, ".", ext)
+    if (!nzchar(current_ext)) {
+      path <- paste0(path, ".", ext)
+    }
   }
 
   if (!is.null(tag)) {
@@ -79,22 +84,26 @@ out <- function(path, ext = NULL, tag = NULL,
   conflict <- match.arg(conflict, c("ask", "increment", "error", "overwrite"))
   requested <- path
   action <- "new"
-  if (file.exists(path)) {
+  if (fs::file_exists(path)) {
     resolved <- resolve_output_conflict(path, conflict)
     path <- resolved$path
     action <- resolved$action
   }
 
-  parent <- dirname(path)
-  if (!dir.exists(parent)) {
+  parent <- as.character(fs::path_dir(path))
+  if (!fs::dir_exists(parent)) {
     if (!create_dir) {
       stop("Output directory does not exist: ", parent, call. = FALSE)
     }
-    if (!dir.create(parent, recursive = TRUE, showWarnings = FALSE) &&
-        !dir.exists(parent)) {
-      stop("Cannot create output directory: ", parent, call. = FALSE)
-    }
+    tryCatch(
+      fs::dir_create(parent),
+      error = function(e) {
+        stop("Cannot create output directory: ", parent, call. = FALSE)
+      }
+    )
   }
+
+  path <- as.character(path)
 
   log_file <- output_log_file(path, log)
   if (!is.null(log_file)) {
@@ -128,8 +137,8 @@ out <- function(path, ext = NULL, tag = NULL,
 outputs <- function(log = getOption("cic.out.dir", "."), existing = NA,
                     n = Inf) {
   assert_scalar_string(log, "log")
-  if (dir.exists(log) || !grepl("\\.csv$", log, ignore.case = TRUE)) {
-    log <- file.path(log, ".cic_outputs.csv")
+  if (fs::dir_exists(log) || !grepl("\\.csv$", log, ignore.case = TRUE)) {
+    log <- as.character(fs::path(log, ".cic_outputs.csv"))
   }
   if (!is.logical(existing) || length(existing) != 1L) {
     stop("`existing` must be TRUE, FALSE, or NA.", call. = FALSE)
@@ -138,7 +147,7 @@ outputs <- function(log = getOption("cic.out.dir", "."), existing = NA,
       (!is.infinite(n) && n != floor(n))) {
     stop("`n` must be one non-negative whole number or Inf.", call. = FALSE)
   }
-  if (!file.exists(log)) {
+  if (!fs::file_exists(log)) {
     message("No cic output log found at: ", log)
     return(empty_output_log())
   }
@@ -149,7 +158,7 @@ outputs <- function(log = getOption("cic.out.dir", "."), existing = NA,
   if (!all(required %in% names(ans))) {
     stop("Invalid cic output log: required columns are missing.", call. = FALSE)
   }
-  ans$exists <- file.exists(ans$file)
+  ans$exists <- unname(fs::file_exists(ans$file))
   if (!is.na(existing)) ans <- ans[ans$exists == existing, , drop = FALSE]
   ans <- ans[rev(seq_len(nrow(ans))), , drop = FALSE]
   if (is.finite(n) && nrow(ans) > n) ans <- ans[seq_len(n), , drop = FALSE]
@@ -182,38 +191,49 @@ resolve_output_conflict <- function(path, conflict) {
   }
   if (identical(conflict, "error")) {
     stop("Output file already exists:\n  ",
-         normalizePath(path, mustWork = FALSE), call. = FALSE)
+         as.character(fs::path_abs(path)), call. = FALSE)
   }
   list(path = path, action = "overwrite")
 }
 
 output_log_file <- function(path, log) {
   if (identical(log, FALSE) || is.null(log)) return(NULL)
-  if (identical(log, TRUE)) return(file.path(dirname(path), ".cic_outputs.csv"))
+  if (identical(log, TRUE)) {
+    return(as.character(fs::path(fs::path_dir(path), ".cic_outputs.csv")))
+  }
   assert_scalar_string(log, "log")
-  if (dir.exists(log)) file.path(log, ".cic_outputs.csv") else log
+  if (fs::dir_exists(log)) {
+    as.character(fs::path(log, ".cic_outputs.csv"))
+  } else {
+    log
+  }
 }
 
 append_output_log <- function(log, path, requested, action) {
-  parent <- dirname(log)
-  if (!dir.exists(parent) &&
-      !dir.create(parent, recursive = TRUE, showWarnings = FALSE) &&
-      !dir.exists(parent)) {
-    stop("Cannot create log directory: ", parent)
+  parent <- as.character(fs::path_dir(log))
+  if (!fs::dir_exists(parent)) {
+    tryCatch(
+      fs::dir_create(parent),
+      error = function(e) stop("Cannot create log directory: ", parent)
+    )
   }
   record <- data.frame(
     time = format(Sys.time(), "%Y-%m-%d %H:%M:%S %z"),
-    file = normalizePath(path, winslash = "/", mustWork = FALSE),
-    requested = normalizePath(requested, winslash = "/", mustWork = FALSE),
+    file = log_path(path),
+    requested = log_path(requested),
     action = action,
     script = active_script(),
     stringsAsFactors = FALSE
   )
-  present <- file.exists(log) && file.info(log)$size > 0
+  present <- fs::file_exists(log) && as.numeric(fs::file_size(log)) > 0
   utils::write.table(record, log, sep = ",", row.names = FALSE,
                      col.names = !present, append = present, qmethod = "double",
                      fileEncoding = "UTF-8")
   invisible(log)
+}
+
+log_path <- function(path) {
+  chartr("\\", "/", as.character(fs::path_abs(path)))
 }
 
 active_script <- function() {

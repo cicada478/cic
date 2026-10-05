@@ -1,3 +1,21 @@
+# cic v0.3.0: fs-backed output paths
+
+[简体中文](https://github.com/cicada478/cic/blob/main/NEWS.md) | **English**
+
+In development
+
+- `out()`, `outputs()`, `ggsave1()`, and their internal filename helpers now
+  use `fs` for path decomposition, extensions, existence checks, directory
+  creation, and internal path operations. Caller-visible path strings retain
+  their 0.2.0 representation.
+- The public arguments, four collision policies, options, log columns, default
+  behavior, and plain-character return type of `out()` remain unchanged.
+- Added regression coverage for Unicode and space-containing directories,
+  return types, and a parent path that is a file rather than a directory.
+- `fs` is an internal filesystem backend only. Path allocation is still not a
+  cross-process lock, and logs still describe allocations made before a writer
+  runs.
+
 # cic v0.2.0: Safe output paths and output logs
 
 [简体中文](https://github.com/cicada478/cic/blob/main/NEWS.md) | **English**

@@ -1,6 +1,6 @@
 Package: cic
 Title: Personal Utilities for Single-Cell Data Analysis
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: person("Cicada", email = "cicada_7x@163.com",
     role = c("aut", "cre"))
 Description: A collection of personal utilities for single-cell sequencing
@@ -9,6 +9,6 @@ Description: A collection of personal utilities for single-cell sequencing
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports:
+    fs,
     ggplot2,
-    tools,
     utils
