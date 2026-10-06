@@ -2,7 +2,7 @@
 
 [简体中文](https://github.com/cicada478/cic/blob/main/NEWS.md) | **English**
 
-In development
+Release date: 2026-10-06
 
 - `out()`, `outputs()`, `ggsave1()`, and their internal filename helpers now
   use `fs` for path decomposition, extensions, existence checks, directory
