@@ -6,8 +6,7 @@
 applies one naming policy to RDS, CSV, PDF, PNG, QS2, and other files: add a
 date, prevent silent overwrites, and keep a queryable allocation log.
 
-This document describes development version `0.3.1`; the current stable
-release remains `0.3.0`. `cic` only handles paths
+This document describes stable version `0.3.1`. `cic` only handles paths
 passed explicitly to `out()` or `ggsave1()`; it does not monitor the filesystem
 or rename package caches and temporary files.
 Starting with 0.3.0, path operations use `fs` as an internal backend; naming,
@@ -47,17 +46,17 @@ install.packages("remotes")
 remotes::install_github("cicada478/cic")
 ```
 
-The current stable release is `v0.3.0`. Install that exact version with:
+The current stable release is `v0.3.1`. Install that exact version with:
 
 ```r
-remotes::install_github("cicada478/cic@v0.3.0")
+remotes::install_github("cicada478/cic@v0.3.1")
 ```
 
 The Release also provides a verified R source package:
 
 ```r
 install.packages(
-  "https://github.com/cicada478/cic/releases/download/v0.3.0/cic_0.3.0.tar.gz",
+  "https://github.com/cicada478/cic/releases/download/v0.3.1/cic_0.3.1.tar.gz",
   repos = NULL,
   type = "source"
 )
@@ -65,7 +64,7 @@ install.packages(
 
 Download `SHA256SUMS` from the same Release and run
 `sha256sum -c SHA256SUMS`. On Windows PowerShell, compare it with
-`Get-FileHash cic_0.3.0.tar.gz -Algorithm SHA256`.
+`Get-FileHash cic_0.3.1.tar.gz -Algorithm SHA256`.
 
 For a local source checkout, install `fs` and `ggplot2`, then run this from
 the repository root:
@@ -249,11 +248,11 @@ From the repository root:
 
 ```sh
 R CMD build .
-R CMD check --no-manual cic_0.3.0.tar.gz
+R CMD check --no-manual cic_0.3.1.tar.gz
 ```
 
 The check runs examples, `tests/output.R`, and `tests/ggsave1.R`. The current
-0.3.0 candidate produced `Status: OK` in the local environment above.
+0.3.1 candidate produced `Status: OK` in the local environment above.
 
 See [the English release notes](NEWS.en.md) for release changes. Report
 problems through

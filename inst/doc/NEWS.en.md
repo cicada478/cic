@@ -2,7 +2,7 @@
 
 [简体中文](https://github.com/cicada478/cic/blob/main/NEWS.md) | **English**
 
-Release date: TBD
+Release date: 2026-10-08
 
 - Absolute `path` values now take precedence over `dir` and `cic.out.dir`
   instead of being appended to the output root.

@@ -6,8 +6,7 @@
 输出，为 RDS、CSV、PDF、PNG、QS2 等结果添加日期、防止静默覆盖，并记录
 可查询的输出日志。
 
-本文档对应开发版本 `0.3.1`；当前稳定版仍为 `0.3.0`。`cic` 只处理显式传给
-`out()` 或 `ggsave1()`
+本文档对应稳定版本 `0.3.1`。`cic` 只处理显式传给 `out()` 或 `ggsave1()`
 的路径，不监听文件系统，因此不会改写其他包的 cache、临时文件或中间文件。
 从 0.3.0 起，路径操作统一使用 `fs` 作为内部后端；命名、冲突和日志策略仍由
 `cic` 定义。
@@ -43,17 +42,17 @@ install.packages("remotes")
 remotes::install_github("cicada478/cic")
 ```
 
-当前稳定版为 `v0.3.0`，可固定安装该版本：
+当前稳定版为 `v0.3.1`，可固定安装该版本：
 
 ```r
-remotes::install_github("cicada478/cic@v0.3.0")
+remotes::install_github("cicada478/cic@v0.3.1")
 ```
 
 也可以安装 Release 中经过校验的 R 源码包：
 
 ```r
 install.packages(
-  "https://github.com/cicada478/cic/releases/download/v0.3.0/cic_0.3.0.tar.gz",
+  "https://github.com/cicada478/cic/releases/download/v0.3.1/cic_0.3.1.tar.gz",
   repos = NULL,
   type = "source"
 )
@@ -61,7 +60,7 @@ install.packages(
 
 同一 Release 提供 `SHA256SUMS`。下载两个文件后可运行
 `sha256sum -c SHA256SUMS`；Windows PowerShell 用户也可以用
-`Get-FileHash cic_0.3.0.tar.gz -Algorithm SHA256` 对照检查。
+`Get-FileHash cic_0.3.1.tar.gz -Algorithm SHA256` 对照检查。
 
 从本地源码安装时，需要先安装 `fs` 和 `ggplot2`，再在仓库根目录运行：
 
@@ -257,10 +256,10 @@ ggsave1("scatter.pdf", p, confirm = FALSE, add_date = FALSE)
 
 ```sh
 R CMD build .
-R CMD check --no-manual cic_0.3.0.tar.gz
+R CMD check --no-manual cic_0.3.1.tar.gz
 ```
 
-检查会运行帮助示例、`tests/output.R` 和 `tests/ggsave1.R`。当前 `0.3.0`
+检查会运行帮助示例、`tests/output.R` 和 `tests/ggsave1.R`。当前 `0.3.1`
 候选版本在上述本地环境中的结果为：
 
 ```text
