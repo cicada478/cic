@@ -6,7 +6,8 @@
 applies one naming policy to RDS, CSV, PDF, PNG, QS2, and other files: add a
 date, prevent silent overwrites, and keep a queryable allocation log.
 
-This document describes version `0.3.0`. `cic` only handles paths
+This document describes development version `0.3.1`; the current stable
+release remains `0.3.0`. `cic` only handles paths
 passed explicitly to `out()` or `ggsave1()`; it does not monitor the filesystem
 or rename package caches and temporary files.
 Starting with 0.3.0, path operations use `fs` as an internal backend; naming,
@@ -158,6 +159,12 @@ options(cic.out.log = FALSE)
 out("result.csv", log = "logs/analysis-outputs.csv")
 ```
 
+To protect existing data, a non-empty custom log must have the exact columns
+written by `cic`, in this order: `time, file, requested, action, script`.
+Ordinary CSV files and reordered columns are rejected before appending, so the
+original file remains unchanged. `outputs()` also reports malformed CSV with
+an error that identifies the affected log path.
+
 ## Project configuration
 
 Explicit function arguments override these ordinary R options:
@@ -180,6 +187,10 @@ options(
 saveRDS(seu, out("seurat.rds"))
 outputs()
 ```
+
+`cic.out.dir` applies only to relative paths. An absolute path passed to
+`out()` always takes precedence and remains at its original location instead
+of being appended to the project output root.
 
 Missing parent directories are created by default. Set `create_dir = FALSE` to
 require them to exist already.

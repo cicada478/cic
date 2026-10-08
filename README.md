@@ -6,7 +6,8 @@
 输出，为 RDS、CSV、PDF、PNG、QS2 等结果添加日期、防止静默覆盖，并记录
 可查询的输出日志。
 
-本文档对应版本 `0.3.0`。`cic` 只处理显式传给 `out()` 或 `ggsave1()`
+本文档对应开发版本 `0.3.1`；当前稳定版仍为 `0.3.0`。`cic` 只处理显式传给
+`out()` 或 `ggsave1()`
 的路径，不监听文件系统，因此不会改写其他包的 cache、临时文件或中间文件。
 从 0.3.0 起，路径操作统一使用 `fs` 作为内部后端；命名、冲突和日志策略仍由
 `cic` 定义。
@@ -174,6 +175,10 @@ options(cic.out.log = FALSE)
 out("result.csv", log = "logs/analysis-outputs.csv")
 ```
 
+为防止误伤已有数据，非空的自定义日志必须具有 `cic` 写出的精确字段顺序：
+`time, file, requested, action, script`。普通 CSV 或字段顺序不同会在追加前被
+拒绝，原文件保持不变；`outputs()` 还会将损坏的 CSV 报告为包含日志路径的错误。
+
 ## 项目级配置
 
 `out()` 使用普通 R options；函数的显式参数优先于这些默认值。
@@ -196,6 +201,9 @@ options(
 saveRDS(seu, out("seurat.rds"))
 outputs()
 ```
+
+`cic.out.dir` 只作用于相对路径。传给 `out()` 的绝对路径始终优先，并保持在其
+原位置，不会拼接到项目输出根目录后。
 
 缺失的父目录默认会自动创建。需要严格要求目录事先存在时，使用
 `create_dir = FALSE`。

@@ -1,3 +1,19 @@
+# cic v0.3.1: Path and log safety fixes
+
+[简体中文](https://github.com/cicada478/cic/blob/main/NEWS.md) | **English**
+
+Release date: TBD
+
+- Absolute `path` values now take precedence over `dir` and `cic.out.dir`
+  instead of being appended to the output root.
+- Before appending to a non-empty existing log, `cic` now requires the exact
+  log columns in the expected order. Ordinary CSV files are rejected without
+  modification.
+- `outputs()` now reports malformed CSV and incompatible log schemas with a
+  stable error that includes the affected log path.
+- Added regression coverage for absolute paths, ordinary CSV files, empty and
+  valid logs, reordered columns, and malformed logs.
+
 # cic v0.3.0: fs-backed output paths
 
 [简体中文](https://github.com/cicada478/cic/blob/main/NEWS.md) | **English**

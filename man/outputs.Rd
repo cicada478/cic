@@ -5,7 +5,8 @@
 outputs(log = getOption("cic.out.dir", "."), existing = NA, n = Inf)
 }
 \arguments{
-\item{log}{A \code{.cic_outputs.csv} file or a directory containing one.}
+\item{log}{A \code{.cic_outputs.csv} file or a directory containing one.
+Existing logs must have the exact schema written by \code{out()}.}
 \item{existing}{Keep all records (\code{NA}), existing files
 (\code{TRUE}), or missing files (\code{FALSE}).}
 \item{n}{Maximum number of most recent records to return.}

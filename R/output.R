@@ -16,7 +16,8 @@
 #'   non-interactive sessions; `"increment"` finds an unused numbered name;
 #'   `"error"` stops; and `"overwrite"` returns the existing path.
 #' @param dir Optional output directory. Defaults to the `cic.out.dir` option,
-#'   if set. An explicit directory in `path` is preserved inside `dir`.
+#'   if set. Relative paths are placed inside `dir`; absolute paths take
+#'   precedence and are left unchanged.
 #' @param create_dir Whether to create missing parent directories.
 #' @param log `TRUE` records the allocated path in `.cic_outputs.csv` beside
 #'   the output, `FALSE` disables logging, and a character value specifies a
@@ -40,10 +41,12 @@ out <- function(path, ext = NULL, tag = NULL,
 
   if (!is.null(dir)) {
     assert_scalar_string(dir, "dir")
-    # Preserve the caller-visible lexical form used by cic 0.2.0. `fs` is the
-    # filesystem backend, but normalizing separators here would change the
-    # character value returned on Windows.
-    path <- file.path(dir, path)
+    if (!fs::is_absolute_path(path)) {
+      # Preserve the caller-visible lexical form used by cic 0.2.0. `fs` is
+      # the filesystem backend, but normalizing separators here would change
+      # the character value returned on Windows.
+      path <- file.path(dir, path)
+    }
   }
 
   if (!is.null(ext)) {
@@ -107,6 +110,7 @@ out <- function(path, ext = NULL, tag = NULL,
 
   log_file <- output_log_file(path, log)
   if (!is.null(log_file)) {
+    validate_existing_output_log(log_file)
     tryCatch(
       append_output_log(log_file, path, requested, action),
       error = function(e) warning("Could not update output log: ",
@@ -120,7 +124,8 @@ out <- function(path, ext = NULL, tag = NULL,
 #' Inspect paths allocated by [out()]
 #'
 #' @param log A `.cic_outputs.csv` file or a directory containing one. By
-#'   default, uses `cic.out.dir` or the current working directory.
+#'   default, uses `cic.out.dir` or the current working directory. Existing
+#'   logs must have the exact schema written by [out()].
 #' @param existing Keep all records (`NA`, the default), only files that exist
 #'   (`TRUE`), or only missing files (`FALSE`).
 #' @param n Maximum number of most recent records to return.
@@ -152,12 +157,7 @@ outputs <- function(log = getOption("cic.out.dir", "."), existing = NA,
     return(empty_output_log())
   }
 
-  ans <- utils::read.csv(log, stringsAsFactors = FALSE,
-                         colClasses = "character", check.names = FALSE)
-  required <- c("time", "file", "requested", "action", "script")
-  if (!all(required %in% names(ans))) {
-    stop("Invalid cic output log: required columns are missing.", call. = FALSE)
-  }
+  ans <- read_output_log(log)
   ans$exists <- unname(fs::file_exists(ans$file))
   if (!is.na(existing)) ans <- ans[ans$exists == existing, , drop = FALSE]
   ans <- ans[rev(seq_len(nrow(ans))), , drop = FALSE]
@@ -232,6 +232,52 @@ append_output_log <- function(log, path, requested, action) {
   invisible(log)
 }
 
+output_log_columns <- function() {
+  c("time", "file", "requested", "action", "script")
+}
+
+validate_existing_output_log <- function(log) {
+  if (!fs::file_exists(log) || as.numeric(fs::file_size(log)) == 0) {
+    return(invisible(log))
+  }
+
+  header <- tryCatch(
+    utils::read.csv(log, nrows = 0L, check.names = FALSE),
+    error = function(e) stop_invalid_output_log(log, "The header is not valid CSV.")
+  )
+  validate_output_log_schema(header, log)
+  invisible(log)
+}
+
+read_output_log <- function(log) {
+  ans <- tryCatch(
+    utils::read.csv(log, stringsAsFactors = FALSE,
+                    colClasses = "character", check.names = FALSE),
+    error = function(e) stop_invalid_output_log(log, "The file is not valid CSV.")
+  )
+  validate_output_log_schema(ans, log)
+  ans
+}
+
+validate_output_log_schema <- function(x, log) {
+  if (!identical(names(x), output_log_columns())) {
+    stop_invalid_output_log(
+      log,
+      paste0("Expected columns, in order: ",
+             paste(output_log_columns(), collapse = ", "), ".")
+    )
+  }
+  invisible(x)
+}
+
+stop_invalid_output_log <- function(log, reason) {
+  stop(
+    "Invalid cic output log at:\n  ", as.character(fs::path_abs(log)),
+    "\n", reason,
+    call. = FALSE
+  )
+}
+
 log_path <- function(path) {
   chartr("\\", "/", as.character(fs::path_abs(path)))
 }
@@ -248,9 +294,11 @@ active_script <- function() {
 }
 
 empty_output_log <- function() {
-  data.frame(time = character(), file = character(), requested = character(),
-             action = character(), script = character(), exists = logical(),
-             stringsAsFactors = FALSE)
+  ans <- as.data.frame(rep(list(character()), length(output_log_columns())),
+                       stringsAsFactors = FALSE)
+  names(ans) <- output_log_columns()
+  ans$exists <- logical()
+  ans
 }
 
 assert_scalar_string <- function(x, name) {

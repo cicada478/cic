@@ -72,6 +72,61 @@ run_output_checks <- function() {
             nrow(outputs()) == 1L, outputs()$exists[[1L]])
   options(old)
 
+  absolute_path <- file.path(output_dir, "absolute", "result.csv")
+  old <- options(cic.out.dir = file.path(output_dir, "ignored-option-dir"))
+  on.exit(options(old), add = TRUE)
+  absolute_result <- out(absolute_path, timestamp = FALSE, log = FALSE)
+  stopifnot(identical(absolute_result, absolute_path),
+            dir.exists(dirname(absolute_path)),
+            !dir.exists(getOption("cic.out.dir")))
+  explicit_dir_result <- out(
+    absolute_path,
+    dir = file.path(output_dir, "ignored-explicit-dir"),
+    timestamp = FALSE,
+    log = FALSE
+  )
+  stopifnot(identical(explicit_dir_result, absolute_path),
+            !dir.exists(file.path(output_dir, "ignored-explicit-dir")))
+  options(old)
+
+  ordinary_log <- file.path(output_dir, "ordinary.csv")
+  write.csv(data.frame(sample = "keep", value = 1), ordinary_log,
+            row.names = FALSE)
+  ordinary_before <- readBin(ordinary_log, "raw", n = file.info(ordinary_log)$size)
+  expect_error(
+    out(file.path(output_dir, "must-not-log.csv"), timestamp = FALSE,
+        log = ordinary_log),
+    "Invalid cic output log at:"
+  )
+  ordinary_after <- readBin(ordinary_log, "raw", n = file.info(ordinary_log)$size)
+  stopifnot(identical(ordinary_after, ordinary_before))
+
+  valid_log <- file.path(output_dir, "valid-log.csv")
+  out(file.path(output_dir, "valid-one.csv"), timestamp = FALSE,
+      log = valid_log)
+  out(file.path(output_dir, "valid-two.csv"), timestamp = FALSE,
+      log = valid_log)
+  stopifnot(nrow(outputs(valid_log)) == 2L)
+
+  empty_log <- file.path(output_dir, "empty-log.csv")
+  file.create(empty_log)
+  out(file.path(output_dir, "from-empty.csv"), timestamp = FALSE,
+      log = empty_log)
+  stopifnot(nrow(outputs(empty_log)) == 1L)
+
+  reordered_log <- file.path(output_dir, "reordered-log.csv")
+  writeLines("file,time,requested,action,script", reordered_log)
+  expect_error(
+    out(file.path(output_dir, "reordered.csv"), timestamp = FALSE,
+        log = reordered_log),
+    "Expected columns, in order"
+  )
+
+  malformed_log <- file.path(output_dir, "malformed-log.csv")
+  writeLines(c("time,file,requested,action,script", "1,2,3,4,5,6,7"),
+             malformed_log)
+  expect_error(outputs(malformed_log), "Invalid cic output log at:")
+
   expect_error(out(NA_character_), "path")
   expect_error(out("x.csv", ext = "rds"), "already has extension")
   expect_error(out("x", tag = "bad/tag"), "tag")

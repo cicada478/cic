@@ -18,7 +18,8 @@ out(path, ext = NULL, tag = NULL,
 \code{"error"}, or \code{"overwrite"}. In a non-interactive session,
 \code{"ask"} safely falls back to \code{"increment"}.}
 \item{dir}{Optional output directory; defaults to option
-\code{cic.out.dir}.}
+\code{cic.out.dir}. Relative paths are placed inside this directory;
+absolute paths take precedence and are left unchanged.}
 \item{create_dir}{Whether to create missing parent directories.}
 \item{log}{\code{TRUE} to log beside the output, \code{FALSE} to disable
 logging, or an explicit log filename.}
