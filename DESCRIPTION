@@ -1,14 +1,29 @@
 Package: cic
 Title: Personal Utilities for Single-Cell Data Analysis
-Version: 0.3.1
+Version: 0.4.1
 Authors@R: person("Cicada", email = "cicada_7x@163.com",
     role = c("aut", "cre"))
 Description: A collection of personal utilities for single-cell sequencing
-    data analysis. Provides a common output-path policy, output logging, and
-    convenient plot export with protection against accidental file overwrites.
+    data analysis. Provides a common output-path policy, output logging,
+    plot export with protection against accidental file overwrites, and an interactive editor
+    for named lists of marker genes, colours, and cell type orders.
 License: MIT + file LICENSE
 Encoding: UTF-8
+URL: https://github.com/cicada478/cic,
+    https://cicada478.github.io/cic/
+BugReports: https://github.com/cicada478/cic/issues
+VignetteBuilder: knitr
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
 Imports:
+    data.table,
     fs,
     ggplot2,
     utils
+Suggests:
+    shiny,
+    jsonlite,
+    rstudioapi,
+    testthat,
+    knitr,
+    rmarkdown

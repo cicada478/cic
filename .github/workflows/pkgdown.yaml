@@ -1,0 +1,106 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    env:
+      DOCS_CHANNEL: ${{ github.event_name == 'release' && !github.event.release.prerelease && !github.event.release.draft && github.repository == 'cicada478/cic' && 'release' || 'development' }}
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      channel: ${{ steps.channel.outputs.value }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
+          persist-credentials: false
+      - name: Select channel and verify latest release
+        id: channel
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if [ "$DOCS_CHANNEL" = "release" ]; then
+            latest=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
+            test "$latest" = "$RELEASE_TAG"
+          fi
+          echo "value=$DOCS_CHANNEL" >> "$GITHUB_OUTPUT"
+      - uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-pandoc@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
+      - uses: r-lib/actions/setup-r-dependencies@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
+        with:
+          extra-packages: |
+            any::pkgdown
+            any::roxygen2
+            local::.
+          needs: website
+      - name: Check generated help is current
+        run: |
+          Rscript -e 'roxygen2::roxygenise(roclets = c("rd", "namespace"))'
+          git diff --exit-code -- man NAMESPACE
+      - name: Build documentation
+        run: Rscript scripts/build-docs.R "$DOCS_CHANNEL"
+      - name: Check local links
+        run: |
+          if [ "$DOCS_CHANNEL" = "release" ]; then
+            Rscript scripts/check-site.R docs
+          else
+            Rscript scripts/check-site.R docs/dev
+          fi
+      - name: Upload development preview
+        if: env.DOCS_CHANNEL == 'development'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cic-development-docs
+          path: docs/dev
+          if-no-files-found: error
+      - name: Configure Pages
+        if: env.DOCS_CHANNEL == 'release'
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      - name: Upload stable site
+        if: env.DOCS_CHANNEL == 'release'
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.channel == 'release'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: stable-documentation
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Recheck latest release before deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          latest=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
+          test "$latest" = "$RELEASE_TAG"
+      - name: Deploy stable documentation
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

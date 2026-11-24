@@ -14,3 +14,6 @@ Thumbs.db
 .local-library/
 cic.Rcheck/
 cic_*.tar.gz
+.compat-source/
+docs/
+**/.cic_outputs.csv

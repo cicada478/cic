@@ -1,0 +1,177 @@
+---
+title: "创建基因集和细胞类型顺序 / Create gene lists and cell orders"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{创建基因集和细胞类型顺序 / Create gene lists and cell orders}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+[English](#english)
+
+## 打开空白列表
+
+以下打开编辑器的代码必须在交互式 R 中手动运行；构建文档时不会打开窗口。
+先安装可选依赖 `shiny`、`jsonlite`。只有 RStudio dialog 模式需要 `rstudioapi`。
+
+```{r open, eval=FALSE}
+cell_order <- cic::list_edit()
+```
+
+1. 将列标题改为便于识别的名称，例如 `cell_order`。
+2. 逐行输入 `T_cell`、`B_cell`、`Myeloid`，或直接粘贴三行文本。
+3. 拖动项目左侧手柄，或用上下按钮调整顺序。
+4. 点击 **Done & return**，编辑结束，R 中得到字符向量。
+
+例如最终的顺序可以是：
+
+```{r vector-result}
+cell_order <- c("T_cell", "B_cell", "Myeloid")
+cell_order
+factor(c("Myeloid", "T_cell"), levels = cell_order)
+```
+
+这里的 `c(...)` 演示返回对象；实际操作时不需要手工输入引号或逗号。
+列标题不会成为单列向量的名称。这个界面操作示例不是自动化 UI 测试记录。
+
+## 多组 marker genes
+
+```{r groups, eval=FALSE}
+markers <- cic::list_edit()
+```
+
+点击 **Add column**，输入两列，标题分别为 `T_cell` 和 `B_cell`：
+
+| T_cell | B_cell |
+|---|---|
+| CD3D | MS4A1 |
+| CD3E | CD79A |
+| TRAC | |
+
+完成后的对象与下面代码等价：
+
+```{r list-result}
+markers <- list(T_cell = c("CD3D", "CD3E", "TRAC"),
+                B_cell = c("MS4A1", "CD79A"))
+markers$T_cell
+```
+
+列内排序只影响该列；拖动标题手柄移动整列。各列可以有不同长度。
+不支持跨列拖动，也不支持“细胞类型—颜色”这样的关联行移动。
+
+## 自动返回还是固定类型
+
+| 设置 | 完成时的结果 |
+|---|---|
+| `output = "auto"`（默认） | 一列返回字符向量，多列返回命名 list |
+| `output = "list"` | 无论一列或多列，始终返回命名 list |
+| `output = "vector"` | 只允许一列，禁止新增列；多列初始输入会报错 |
+
+空列也计入列数。一列没有内容时自动返回 `character(0)`；多个空列则保留为 list 中的空向量。
+如果下游代码始终使用 `markers$T_cell`，建议固定 list 类型：
+
+```{r fixed-type, eval=FALSE}
+markers <- cic::list_edit(markers, output = "list")
+genes <- cic::list_edit(output = "vector")
+```
+
+列名必须非空且唯一；空白单元格和 R 缺失值被略去。
+保留其他空格、大小写、重复项目、顺序和文本 `001`、`NA`；不会执行公式。
+向量元素本身的 names 不保留。
+
+## 选择窗口
+
+| 设置 | 打开方式 |
+|---|---|
+| `viewer = "auto"`（默认） | Windows 优先使用已有 Edge/Chrome 独立窗口，否则默认浏览器 |
+| `viewer = "window"` | 同 auto；找不到支持的程序时提示并退回浏览器 |
+| `viewer = "browser"` | 默认浏览器，可能是一个标签页 |
+| `viewer = "dialog"` | RStudio 内置对话框，需要 rstudioapi，保留其移动与缩放限制 |
+
+独立窗口可使用系统移动、缩放和最大化控件，不保证始终置顶。
+编辑期间占用当前 R 会话；不是可以边运行其他 R 代码边实时同步的后台应用。
+
+```{r viewers, eval=FALSE}
+cell_order <- cic::list_edit(viewer = "browser")
+# 仅在 RStudio 中运行：
+cell_order <- cic::list_edit(viewer = "dialog")
+```
+
+## 快捷键与记录
+
+| 操作 | 效果 |
+|---|---|
+| `Enter` / `Shift + Enter` | 本列下一项 / 上一项 |
+| `Tab` / `Shift + Tab` | 下一列 / 上一列，到边界换行 |
+| `Alt + Up` / `Alt + Down` | 上移 / 下移当前项目 |
+| `Esc` | 从单元格移到工具栏 |
+| **Undo / Redo** | 撤销 / 重做，也可恢复删除的列 |
+
+**Export CSV** 下载 UTF-8 文件，用空单元格补齐短列；不自动覆盖输入 CSV。
+
+```{r reopen, eval=FALSE}
+markers <- cic::list_edit(file = "markers.csv", output = "list")
+markers <- cic::list_edit(file = "markers.tsv", output = "list")
+```
+
+`file` 使用 `data.table::fread()` 自动识别 CSV、TSV、分号分隔等 UTF-8 文本（支持 BOM）。首个非空行必须是列名；所有列按字符读取，保留 `001`、文本 `NA` 和非空值两侧空格。包含分隔符或双引号的内容需加引号，内部双引号写成两个双引号。列名非空且唯一；解析警告会转为错误，不接受部分读取结果。Excel 和 RDS 等二进制格式不支持直接导入，导出格式仍为 CSV。
+
+`x` 和 `file` 不能同时提供。**R code** 生成与返回对象等价的 R 表达式；复制到脚本并加上
+`markers <-` 即可用于非交互分析。浏览器不允许自动复制时，选中文本手动按 `Ctrl + C`。
+
+**Cancel** 中止赋值，不覆盖已有变量。关闭窗口也会取消，但需要等连接断开被检测到。
+导出 CSV 或查看代码不会提交 R 中的对象；仍需点击 **Done & return**。
+
+## English {#english}
+
+Run editor calls manually in interactive R; they are deliberately not evaluated
+during documentation builds. Install shiny and jsonlite first; only dialog mode
+also needs rstudioapi. Enter one cell-type per row, reorder it using handles or
+buttons, and click Done & return. The vector example above demonstrates the result
+and how to use it as factor levels; you do not need to type quotes or commas in the UI.
+
+Add columns named T_cell and B_cell to create independent gene sets. Columns may
+have unequal lengths. Item dragging affects only its own column; header dragging
+moves a whole column. Cross-column dragging and paired-row movement are unsupported.
+
+Default `output = "auto"` chooses from the final column count: one column yields
+a character vector, multiple columns a named list. Empty columns count. An empty
+single column becomes `character(0)`. Use `output = "list"` for code that always
+expects `$T_cell`; `output = "vector"` requires one column and disables adding columns.
+Column names must be unique/non-blank. Blank cells and R missing values are omitted;
+other whitespace, duplicates, case, order, `001` and literal `NA` are preserved.
+Formula-like text is not executed. Element-level names and a vector's column title
+are not retained.
+
+Default `viewer = "auto"` prefers an existing Edge/Chrome app window on Windows
+and otherwise uses the default browser. `window` behaves the same but reports a
+fallback when no supported executable is found. `browser` may open a tab; `dialog` requires RStudio/rstudioapi and retains
+RStudio's movement/resize restrictions. Native windows are not always-on-top.
+Editing occupies the R session; this is not a background synchronization service.
+
+Enter/Shift+Enter move down/up, Tab/Shift+Tab move across with row wrapping,
+Alt+Up/Down reorder an item, and Escape moves to the toolbar. Undo/Redo can restore
+deleted columns. Export CSV downloads UTF-8 with empty padding cells and never
+automatically overwrites the input. Reopen with `file`; do not provide `x` as well.
+Import uses `data.table::fread()` to detect CSV, TSV and other delimited UTF-8 text,
+including a BOM. The first non-empty row is the header. All columns remain text,
+including `001`, literal `NA` and surrounding whitespace. Quote values containing
+separators or double quotes; double embedded quotes. Names must be non-blank and unique; parser warnings become errors
+instead of accepting partial input. Excel and R binary files are unsupported.
+R code displays a reproducible expression: prefix it with an assignment for a
+batch script. If clipboard access fails, select and copy manually with Ctrl+C.
+
+Cancel aborts assignment and preserves an existing variable. Closing a window
+also cancels after disconnection is detected. Export and code preview do not commit
+the R object; click Done & return. These examples describe usage, not completed
+automated UI acceptance tests. See `?cic::list_edit` for the full reference.
+
+## 设计参考 / Acknowledgement
+
+工具栏、完成/取消和导出理念参考 / Workflow and export concepts inspired by
+[Dillon Hammill's DataEditR](https://github.com/DillonHammill/DataEditR).
+本包独立实现，不包含其源码 / Original implementation; no DataEditR source bundled.

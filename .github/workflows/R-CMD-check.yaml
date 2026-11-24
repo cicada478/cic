@@ -33,10 +33,13 @@ jobs:
         with:
           r-version: release
           use-public-rspm: true
+      - uses: r-lib/actions/setup-pandoc@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
       - uses: r-lib/actions/setup-r-dependencies@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
+      - name: Check list editor event logic
+        run: node tests/editor-js.cjs
       - name: Build and check package
         shell: Rscript {0}
         run: |

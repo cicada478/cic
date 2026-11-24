@@ -17,6 +17,10 @@
 #' @details File naming, collision handling, directory creation, and output
 #'   logging are delegated to [out()]. Automatic renaming appends `_1`, `_2`,
 #'   and so on before the extension, selecting the first unused filename.
+#'   Output-directory and logging options from [out()] apply. `add_date` and
+#'   `confirm` explicitly select this function's timestamp and conflict policy,
+#'   so `cic.out.timestamp` and `cic.out.conflict` do not override those arguments.
+#' @seealso [out()], [outputs()]
 #' @export
 #' @examples
 #' p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()

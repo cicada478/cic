@@ -1,0 +1,27 @@
+url: https://cicada478.github.io/cic/
+template:
+  bootstrap: 5
+development:
+  mode: devel
+destination: docs
+repo:
+  url:
+    home: https://github.com/cicada478/cic/
+    source: https://github.com/cicada478/cic/blob/HEAD/
+    issue: https://github.com/cicada478/cic/issues/
+    user: https://github.com/cicada478/
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github]
+reference:
+  - title: 输出管理 / Output management
+    contents: [out, outputs]
+  - title: 绘图保存 / Plot export
+    contents: [ggsave1]
+  - title: 列表编辑 / List editing
+    contents: [list_edit]
+articles:
+  - title: 使用教程 / Guides
+    navbar: ~
+    contents: [safe-outputs, list-editor]

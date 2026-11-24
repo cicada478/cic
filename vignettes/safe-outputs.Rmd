@@ -1,0 +1,143 @@
+---
+title: "安全保存分析结果 / Safe analysis outputs"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{安全保存分析结果 / Safe analysis outputs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(cic)
+```
+
+[English](#english)
+
+## 从一张 marker 表开始
+
+`out()` 负责生成路径；保存函数负责写入内容。本教程实际运行的示例使用临时目录，
+不会改变已有分析结果，也不依赖 Seurat 或真实测序数据。
+
+```{r first-output}
+result_dir <- tempfile("cic-guide-")
+dir.create(result_dir)
+markers <- data.frame(cell_type = c("T_cell", "B_cell"),
+                      gene = c("CD3D", "MS4A1"))
+path <- out("markers", ext = "csv", tag = "reviewed", dir = result_dir)
+write.csv(markers, path, row.names = FALSE)
+basename(path)
+file.exists(path)
+```
+
+文件名类似 `markers_reviewed_YYYYMMDD.csv`。日期来自运行当天，不是固定示例日期。
+真实项目中可把 `result_dir` 替换为项目的 `results` 目录。
+
+## 重名时如何处理
+
+默认 `conflict = "ask"`：交互式 R 显示菜单；非交互运行自动改为编号。
+为了使教程在任何环境都能执行，下面显式使用 `"increment"`：
+
+```{r collision}
+second <- out("markers", ext = "csv", tag = "reviewed", dir = result_dir,
+              conflict = "increment")
+write.csv(markers, second, row.names = FALSE)
+basename(second)
+stopifnot(path != second, file.exists(path), file.exists(second))
+```
+
+| 参数 | 适用场景 |
+|---|---|
+| `conflict = "ask"` | 默认保护；交互选择，批处理自动编号 |
+| `conflict = "increment"` | 明确选择 `_1`、`_2` 等未占用名称 |
+| `conflict = "error"` | 重名即报错，要求流程显式处理 |
+| `conflict = "overwrite"` | 明确允许后续 writer 覆盖目标 |
+
+`timestamp = FALSE` 取消日期；`tag` 可以是多个标签；`ext` 可带或不带开头的点。
+路径已有不同扩展名时，`ext` 不会静默替换它，而是报错。
+
+## 查看日志 {#logs}
+
+```{r logs}
+outputs(result_dir)[, c("action", "exists")]
+outputs(result_dir, existing = TRUE, n = 1)[, c("action", "exists")]
+```
+
+日志 `.cic_outputs.csv` 在路径分配时写入。下面只分配路径，没有保存数据：
+
+```{r pending}
+pending <- out("not-written.rds", dir = result_dir, timestamp = FALSE)
+outputs(result_dir, existing = FALSE)[, c("action", "exists")]
+```
+
+`exists = FALSE` 也可能表示保存失败或文件后来被删除，不等于函数一定失败。
+日志含 `time, file, requested, action, script`；追加前会校验已有非空日志的字段顺序。
+不要把普通数据 CSV 作为日志文件。损坏或结构不兼容的日志会报错。
+
+每次关闭日志用 `log = FALSE`；项目中关闭用 `options(cic.out.log = FALSE)`。
+日志包含绝对路径和可能的脚本名，公开分享前请审阅。`out()` 不提供跨进程文件锁。
+
+## 保存图形 {#plots}
+
+```{r plot, fig.show='hide'}
+p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+figure <- ggsave1(file.path(result_dir, "scatter.pdf"), p, width = 5, height = 4)
+stopifnot(file.exists(figure))
+```
+
+`ggsave1()` 使用 `out()` 生成路径和写日志，同时保留原有参数。
+`add_date = FALSE` 取消日期，`confirm = FALSE` 明确允许覆盖。
+它的 `add_date`、`confirm` 决定时间与冲突策略，不被 `cic.out.timestamp`、
+`cic.out.conflict` 覆盖；目录与日志选项仍然生效。
+
+## 项目级配置
+
+```{r project-options}
+local({
+  old <- options(cic.out.dir = result_dir, cic.out.timestamp = "%Y%m%d",
+                 cic.out.conflict = "increment", cic.out.log = TRUE)
+  on.exit(options(old))
+  path <- out("summary.rds")
+  saveRDS(markers, path)
+  stopifnot(file.exists(path))
+})
+```
+
+`out()` 的显式参数优先于对应 options；绝对路径不受 `dir` 或 `cic.out.dir` 重定位。
+`create_dir = FALSE` 可要求父目录事先存在。`outputs()` 默认读取 `cic.out.dir`，
+未配置时读取当前目录；其他目录需要显式传入。完整参数见 `?out`、`?outputs`、`?ggsave1`。
+
+## English {#english}
+
+This guide runs in a temporary directory using a tiny marker table. `out()`
+allocates a path; `write.csv()`, `saveRDS()` or another writer creates the file.
+The first example produces `markers_reviewed_YYYYMMDD.csv`, using today's date.
+Replace `result_dir` with a project results directory for real work.
+
+The collision example preserves the first file and allocates an unused numbered
+name. `ask` offers an interactive menu and falls back to `increment` in batch R;
+`increment` always numbers, `error` rejects collisions, and `overwrite` explicitly
+permits the writer to overwrite. `timestamp = FALSE` disables the date. `tag`
+accepts multiple tags; `ext` cannot silently change an existing different extension.
+
+`outputs(result_dir, existing = TRUE, n = 1)` returns the newest existing record.
+Logs record allocation before writing: a missing file may be pending, failed or
+deleted. The required schema is `time, file, requested, action, script`; malformed
+or incompatible logs are rejected. Never use an ordinary data CSV as the log.
+Use `log = FALSE` per call or `options(cic.out.log = FALSE)` per project to disable
+logging. Logs contain absolute paths and possibly script names. Review them before
+sharing. Path allocation is not a cross-process file lock.
+
+`ggsave1()` saves a real PDF in the plot example. Its `add_date` and `confirm`
+arguments control date and collision handling independently of the corresponding
+global options; output-directory and logging options still apply.
+
+The project-options example restores previous options on exit. Explicit `out()`
+arguments override options, and absolute paths take precedence over `dir` and
+`cic.out.dir`. `create_dir = FALSE` requires an existing parent directory.
+`outputs()` defaults to `cic.out.dir` or the working directory. Use `?out`,
+`?outputs` and `?ggsave1` for complete reference documentation.
+
+```{r cleanup, include=FALSE}
+unlink(result_dir, recursive = TRUE)
+```

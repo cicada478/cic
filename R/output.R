@@ -27,6 +27,10 @@
 #'   called afterwards, so [outputs()] reports whether the file now exists and
 #'   makes failed or abandoned writes visible. Path allocation is not a file
 #'   lock; concurrent processes still need their own synchronization.
+#'   Non-empty logs must have exactly the columns `time`, `file`, `requested`,
+#'   `action`, `script`, in this order; incompatible logs are rejected before
+#'   appending. Logs contain absolute local paths and may contain script names.
+#' @seealso [outputs()], [ggsave1()]
 #' @export
 #' @examples
 #' out(tempfile("markers", fileext = ".csv"), log = FALSE)
@@ -131,6 +135,10 @@ out <- function(path, ext = NULL, tag = NULL,
 #' @param n Maximum number of most recent records to return.
 #' @return A data frame ordered from newest to oldest, with an `exists` column
 #'   computed when the function is called.
+#' @details Malformed CSV and incompatible log schemas raise an error containing
+#'   the log path. A directory without a log returns an empty data frame.
+#'   `exists = FALSE` can mean a writer failed, has not run, or a file was removed.
+#' @seealso [out()], [ggsave1()]
 #' @export
 #' @examples
 #' td <- tempfile("cic-outputs-")

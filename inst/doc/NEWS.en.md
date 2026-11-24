@@ -1,3 +1,13 @@
+# cic 0.4.1: Interactive list editing
+
+- Add `list_edit()` for entering, pasting, reordering and importing/exporting independent columns of genes, colours and cell-type orders.
+- Import uses `data.table::fread()` to detect CSV, TSV and other delimited text, retaining character values and original names and treating parser warnings as errors. Add the `data.table` dependency; export remains CSV.
+- Default `output = "auto"` returns a character vector for one final column and a named list for multiple columns, counting empty columns; explicit `"list"` and `"vector"` modes remain available.
+- Prefer an independent Edge/Chrome window on Windows, with explicit `"window"`, `"dialog"` and `"browser"` modes and documented fallback and host-window limitations.
+- Clarify keyboard, completion, cancellation, reorder and paste instructions. Keep the DataEditR design credit in documentation, outside the editor.
+- Retain the 0.3.1 `out()`, `outputs()` and `ggsave1()` APIs and their path/log behaviour.
+- Align help and bilingual READMEs, add two bilingual guides and configure pkgdown. Only the latest stable Release updates the stable site; development branches build previews.
+
 # cic v0.3.1: Path and log safety fixes
 
 [简体中文](https://github.com/cicada478/cic/blob/main/NEWS.md) | **English**

@@ -1,6 +1,16 @@
+# cic 0.4.1：交互式列表编辑
+
+- 新增 `list_edit()`，用于录入、粘贴、排序和 CSV 导入导出 marker genes、颜色与细胞类型顺序；各列独立。
+- 文件导入使用 `data.table::fread()` 自动识别 CSV、TSV 等分隔文本；按字符读取并保留原始列名，解析警告转为错误；新增 `data.table` 依赖，导出仍为 CSV。
+- 默认 `output = "auto"`：完成时一列返回字符向量，多列返回命名 list，空列计数；保留显式 `"list"` 与 `"vector"`。
+- Windows 默认优先使用 Edge/Chrome 独立窗口；支持 `"window"`、`"dialog"` 和 `"browser"`，并说明窗口回退与宿主限制。
+- 快捷键使用按键标签，完善完成、取消、排序与粘贴说明。DataEditR 设计参考保留在文档中，不显示在编辑器内。
+- 保留 0.3.1 的 `out()`、`outputs()`、`ggsave1()` 及路径、日志行为。
+- 统一参数帮助与中英文 README，新增输出管理和列表编辑两篇双语教程，接入 pkgdown；稳定网站仅随最新正式 Release 更新，开发分支只构建预览。
+
 # cic v0.3.1：路径与日志安全修复
 
-**简体中文** | [English](inst/doc/NEWS.en.md)
+**简体中文** | [English](https://github.com/cicada478/cic/blob/main/inst/doc/NEWS.en.md)
 
 发布日期：2026-10-08
 
@@ -12,7 +22,7 @@
 
 # cic v0.3.0：以 fs 作为输出路径后端
 
-**简体中文** | [English](inst/doc/NEWS.en.md)
+**简体中文** | [English](https://github.com/cicada478/cic/blob/main/inst/doc/NEWS.en.md)
 
 发布日期：2026-10-06
 
@@ -27,7 +37,7 @@
 
 # cic v0.2.0：安全输出路径与输出日志
 
-**简体中文** | [English](inst/doc/NEWS.en.md)
+**简体中文** | [English](https://github.com/cicada478/cic/blob/main/inst/doc/NEWS.en.md)
 
 发布日期：2026-10-03
 

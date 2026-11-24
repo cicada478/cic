@@ -7,3 +7,11 @@
 ^LICENSE\.md$
 ^\.github$
 ^README\.en\.md$
+^\.compat-source$
+^docs$
+^_pkgdown\.yml$
+^pkgdown$
+^scripts$
+^releases$
+^DEVELOPMENT\.md$
+^read_csv_gz_sparse_v[0-9]+\.R$
