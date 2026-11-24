@@ -15,7 +15,7 @@ ggsave1(
 \arguments{
 \item{filename}{A single, non-empty filename, optionally including a path.}
 
-\item{plot}{Plot to save. Defaults to \code{\link[ggplot2:get_last_plot]{ggplot2::last_plot()}}.}
+\item{plot}{Plot to save. Defaults to \code{ggplot2::last_plot()}.}
 
 \item{...}{Additional arguments passed to \code{\link[ggplot2:ggsave]{ggplot2::ggsave()}}, including
 \code{path}, \code{device}, \code{width}, \code{height}, \code{units}, and \code{dpi}.}

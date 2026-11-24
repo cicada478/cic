@@ -5,7 +5,7 @@
 #' Missing parent directories are created automatically.
 #'
 #' @param filename A single, non-empty filename, optionally including a path.
-#' @param plot Plot to save. Defaults to [ggplot2::last_plot()].
+#' @param plot Plot to save. Defaults to `ggplot2::last_plot()`.
 #' @param ... Additional arguments passed to [ggplot2::ggsave()], including
 #'   `path`, `device`, `width`, `height`, `units`, and `dpi`.
 #' @param confirm Logical. If `TRUE` (default), an existing destination triggers
