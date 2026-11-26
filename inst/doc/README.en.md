@@ -2,6 +2,8 @@
 
 [简体中文](https://github.com/cicada478/cic/blob/main/README.md) | **English**
 
+[Documentation](https://cicada478.github.io/cic/) · [Function reference](https://cicada478.github.io/cic/reference/index.html) · [Guides](https://cicada478.github.io/cic/articles/index.html) · [Changelog](https://cicada478.github.io/cic/news/index.html)
+
 Everyday tools for R and single-cell analysis: save results safely, track output
 paths, and enter or reorder independent lists.
 
@@ -13,10 +15,10 @@ and occupies the R session until editing finishes.
 
 | Task | Function | Guide |
 |---|---|---|
-| Naming and collision rules for RDS, CSV and other output | `out()` | [Safe outputs](https://github.com/cicada478/cic/blob/main/vignettes/safe-outputs.Rmd) |
-| Inspect allocated paths and current file existence | `outputs()` | [Output logs](https://github.com/cicada478/cic/blob/main/vignettes/safe-outputs.Rmd) |
-| Save ggplot figures | `ggsave1()` | [Plot export](https://github.com/cicada478/cic/blob/main/vignettes/safe-outputs.Rmd) |
-| Enter genes, colours or cell-type orders | `list_edit()` | [List editor](https://github.com/cicada478/cic/blob/main/vignettes/list-editor.Rmd) |
+| Naming and collision rules for RDS, CSV and other output | `out()` | [Safe outputs](https://cicada478.github.io/cic/articles/safe-outputs.html#english) |
+| Inspect allocated paths and current file existence | `outputs()` | [Output logs](https://cicada478.github.io/cic/articles/safe-outputs.html#english) |
+| Save ggplot figures | `ggsave1()` | [Plot export](https://cicada478.github.io/cic/articles/safe-outputs.html#english) |
+| Enter genes, colours or cell-type orders | `list_edit()` | [List editor](https://cicada478.github.io/cic/articles/list-editor.html#english) |
 
 ## Installation and versions
 
@@ -110,10 +112,9 @@ arguments. Both guides have English sections. See [English news](NEWS.en.md)
 and the [Chinese changelog](https://github.com/cicada478/cic/blob/main/NEWS.md),
 or review the [v0.4.1 release notes](https://github.com/cicada478/cic/blob/main/releases/v0.4.1.md).
 
-The pkgdown workflow deploys stable documentation only on a formal Release;
-main/PR builds produce development preview artifacts. The planned address is
-`https://cicada478.github.io/cic/`; availability depends on a successful Pages deployment. See
-[maintenance instructions](https://github.com/cicada478/cic/blob/main/DEVELOPMENT.md).
+The [online documentation](https://cicada478.github.io/cic/) is live, with function
+reference, guides and release history for the stable version. Build and deployment
+rules are described in the [maintenance instructions](https://github.com/cicada478/cic/blob/main/DEVELOPMENT.md).
 
 ## Limitations and validation scope
 

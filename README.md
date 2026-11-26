@@ -2,6 +2,8 @@
 
 **简体中文** | [English](inst/doc/README.en.md)
 
+[文档首页](https://cicada478.github.io/cic/) · [函数参考](https://cicada478.github.io/cic/reference/index.html) · [使用教程](https://cicada478.github.io/cic/articles/index.html) · [更新记录](https://cicada478.github.io/cic/news/index.html)
+
 面向 R 与单细胞分析工作流的日常效率工具：安全保存结果、追踪输出文件、便捷录入和排序列表。
 
 **本文档对应 v0.4.1。** 本次增加 `list_edit()`，保留 `out()`、`outputs()` 和 `ggsave1()`。列表编辑需要交互式 R，编辑期间占用当前 R 会话。
@@ -10,10 +12,10 @@
 
 | 我想做什么 | 函数 | 详细说明 |
 |---|---|---|
-| 保存 RDS、CSV 等结果时统一命名和防止覆盖 | `out()` | [安全保存分析结果](vignettes/safe-outputs.Rmd) |
-| 查看输出路径和文件是否存在 | `outputs()` | [输出日志](vignettes/safe-outputs.Rmd) |
-| 保存 ggplot 图形 | `ggsave1()` | [绘图保存](vignettes/safe-outputs.Rmd) |
-| 输入、粘贴和排序 marker genes、颜色或细胞类型 | `list_edit()` | [创建基因集和细胞类型顺序](vignettes/list-editor.Rmd) |
+| 保存 RDS、CSV 等结果时统一命名和防止覆盖 | `out()` | [安全保存分析结果](https://cicada478.github.io/cic/articles/safe-outputs.html) |
+| 查看输出路径和文件是否存在 | `outputs()` | [输出日志](https://cicada478.github.io/cic/articles/safe-outputs.html#logs) |
+| 保存 ggplot 图形 | `ggsave1()` | [绘图保存](https://cicada478.github.io/cic/articles/safe-outputs.html#plots) |
+| 输入、粘贴和排序 marker genes、颜色或细胞类型 | `list_edit()` | [创建基因集和细胞类型顺序](https://cicada478.github.io/cic/articles/list-editor.html) |
 
 ## 安装与版本
 
@@ -70,7 +72,7 @@ markers <- cic::list_edit(list(T_cell = c("CD3D", "CD3E")), output = "list")
 ```
 
 输入或粘贴后按 `Enter` 向下、`Tab` 向右；拖动列内手柄排序，点击 **Done & return** 返回 R。
-编辑期间占用当前 R 会话。完整操作说明见[列表教程](vignettes/list-editor.Rmd)。
+编辑期间占用当前 R 会话。完整操作说明见[列表教程](https://cicada478.github.io/cic/articles/list-editor.html)。
 
 ## list_edit 的返回类型和窗口
 
@@ -100,15 +102,14 @@ cell_order <- cic::list_edit(viewer = "dialog")
 
 `file` 使用 `data.table::fread()` 自动识别 CSV、TSV、分号分隔等 UTF-8 文本（支持 BOM），首个非空行作为列名。所有列按字符读取，保留文本 `NA` 和非空值两侧空格。
 
-包含分隔符或双引号的值需加引号，内部双引号写成两个双引号。解析警告会转为错误，不返回部分数据。Excel、RDS 等二进制格式不支持直接导入；导出仍为 CSV。示例及操作说明见[列表编辑教程](vignettes/list-editor.Rmd)。
+包含分隔符或双引号的值需加引号，内部双引号写成两个双引号。解析警告会转为错误，不返回部分数据。Excel、RDS 等二进制格式不支持直接导入；导出仍为 CSV。示例及操作说明见[列表编辑教程](https://cicada478.github.io/cic/articles/list-editor.html)。
 
 ## 文档与更新
 
 - 完整参数帮助：`?cic::out`、`?cic::outputs`、`?cic::ggsave1`、`?cic::list_edit`。
-- 教程：[安全保存分析结果](vignettes/safe-outputs.Rmd)、[创建列表](vignettes/list-editor.Rmd)，每篇均有英文部分。
+- 在线教程：[安全保存分析结果](https://cicada478.github.io/cic/articles/safe-outputs.html)、[创建列表](https://cicada478.github.io/cic/articles/list-editor.html)，每篇均有英文部分。
 - 版本变化见[更新记录](NEWS.md)、[English changelog](inst/doc/NEWS.en.md)及 [v0.4.1 发布说明](releases/v0.4.1.md)。
-- 文档站采用 pkgdown；正式 Release 才部署稳定站，main/PR 只生成开发预览文件。
-  目标地址为 `https://cicada478.github.io/cic/`，是否已上线以实际部署结果为准，详见[维护说明](DEVELOPMENT.md)。
+- [在线文档](https://cicada478.github.io/cic/)已上线，提供正式发布版本的函数参考、教程和更新记录。文档构建及部署规则见[维护说明](DEVELOPMENT.md)。
 
 ## 使用限制与验证范围
 
