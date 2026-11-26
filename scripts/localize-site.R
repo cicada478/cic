@@ -63,6 +63,11 @@ localize_site <- function(root, base_url) {
       }
       title <- xml2::xml_find_first(doc, "//title")
       xml2::xml_set_text(title, sub("Authors and Citation", "作者与引用", xml2::xml_text(title), fixed = TRUE))
+      xml2::xml_set_text(title, sub("Package index", "函数索引", xml2::xml_text(title), fixed = TRUE))
+      for (node in xml2::xml_find_all(doc, "//meta[@property='og:title']")) {
+        key <- xml2::xml_attr(node, "content")
+        if (key %in% names(labels)) xml2::xml_set_attr(node, "content", labels[[key]])
+      }
     }
     if (page == "LICENSE.html") {
       heading <- if (english) "MIT License" else "MIT 许可证"
