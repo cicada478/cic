@@ -4,6 +4,7 @@ template:
 development:
   mode: devel
 destination: docs
+llm-docs: false
 repo:
   url:
     home: https://github.com/cicada478/cic/

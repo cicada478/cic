@@ -68,6 +68,8 @@ jobs:
         run: |
           Rscript -e 'roxygen2::roxygenise(roclets = c("rd", "namespace"))'
           git diff --exit-code -- man NAMESPACE
+          # roxygen versions update their own metadata; retain release metadata.
+          git restore -- DESCRIPTION
       - name: Build documentation
         run: Rscript scripts/build-docs.R "$DOCS_CHANNEL"
       - name: Check local links

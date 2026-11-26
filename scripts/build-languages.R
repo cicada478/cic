@@ -5,6 +5,8 @@ build_languages <- function(mode, source_ref) {
   scratch <- tempfile("cic-docs-")
   dir.create(scratch)
   on.exit(unlink(scratch, recursive = TRUE), add = TRUE)
+  site <- file.path(scratch, "site")
+  dir.create(site)
   config <- yaml::read_yaml("_pkgdown.yml")
   base_url <- sub("/+$", "", config$url)
   if (mode == "devel") base_url <- paste0(base_url, "/dev")
@@ -64,8 +66,10 @@ build_languages <- function(mode, source_ref) {
     local_config$lang <- if (english) "en" else "zh_CN"
     local_config$home <- list(title = if (english) "Tools for everyday analysis" else "日常分析效率工具",
       description = if (english) "Output paths, logs, plot export and interactive list editing in R." else "用于 R 分析的输出路径管理、日志查询、图形保存与交互式列表编辑工具。")
-    local_config$destination <- file.path(destination, if (english) "en" else "")
-    local_config$development <- list(mode = mode, destination = "")
+    # Keep pkgdown's standard non-empty development prefix. Build separately,
+    # then assemble / and /en/; newer pkgdown filters site paths by this prefix.
+    local_config$destination <- file.path(scratch, paste0("build-", language))
+    local_config$development <- list(mode = mode, destination = "dev")
     local_config$repo$url$source <- paste0("https://github.com/cicada478/cic/blob/", source_ref, "/")
     local_config$navbar$components <- list(
       reference = list(text = if (english) "Reference" else "函数参考", href = "reference/index.html"),
@@ -82,7 +86,21 @@ build_languages <- function(mode, source_ref) {
     }
     yaml::write_yaml(local_config, file.path(stage, "_pkgdown.yml"))
     pkgdown::build_site(stage, preview = FALSE, new_process = FALSE, install = FALSE)
+    built <- file.path(local_config$destination, if (mode == "devel") "dev" else "")
+    target <- file.path(site, if (english) "en" else "")
+    dir.create(target, showWarnings = FALSE)
+    stopifnot(all(file.copy(list.files(built, full.names = TRUE, all.files = TRUE, no.. = TRUE), target, recursive = TRUE)))
   }
   source(file.path(project, "scripts/localize-site.R"), local = TRUE)
-  localize_site(destination, base_url)
+  localize_site(site, base_url)
+  # Replace only this generated output directory after both builds succeed.
+  # Refuse symlinks/junctions that resolve outside the intended project path.
+  if (dir.exists(destination)) {
+    if (!identical(normalizePath(destination, winslash = "/"), destination)) {
+      stop("Unexpected generated output path: ", destination)
+    }
+    unlink(destination, recursive = TRUE)
+  }
+  dir.create(destination, recursive = TRUE, showWarnings = FALSE)
+  stopifnot(all(file.copy(list.files(site, full.names = TRUE, all.files = TRUE, no.. = TRUE), destination, recursive = TRUE)))
 }
