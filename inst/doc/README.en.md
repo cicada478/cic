@@ -1,4 +1,4 @@
-# cic
+# cic <a href="https://cicada478.github.io/cic/"><img src="../../man/figures/logo.png" align="right" height="138" alt="cic documentation website" /></a>
 
 [简体中文](https://github.com/cicada478/cic/blob/main/README.md) | **English**
 

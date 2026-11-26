@@ -1,4 +1,4 @@
-# cic — English documentation
+# cic — English documentation <a href="https://cicada478.github.io/cic/"><img src="man/figures/logo.png" align="right" height="138" alt="cic documentation website" /></a>
 
 [Documentation](https://cicada478.github.io/cic/) · [Function reference](https://cicada478.github.io/cic/reference/index.html) · [Guides](https://cicada478.github.io/cic/articles/index.html) · [Changelog](https://cicada478.github.io/cic/news/index.html)
 
