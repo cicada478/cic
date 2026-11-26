@@ -59,8 +59,19 @@ for (language in c("", "en")) {
   index <- file.path(root, language, "search.json")
   if (!file.exists(index)) {
     failures <- c(failures, paste(index, "-> missing language-specific search index"))
-  } else if (language == "en" && any(grepl("[一-鿿]", readLines(index, warn = FALSE, encoding = "UTF-8"), perl = TRUE))) {
-    failures <- c(failures, paste(index, "-> Chinese content in English search index"))
+  } else {
+    if (language == "en" && any(grepl("[一-鿿]", readLines(index, warn = FALSE, encoding = "UTF-8"), perl = TRUE))) {
+      failures <- c(failures, paste(index, "-> Chinese content in English search index"))
+    }
+    metadata <- yaml::read_yaml(file.path(root, language, "pkgdown.yml"))
+    prefix <- sub("reference/?$", "", metadata$urls$reference)
+    entries <- jsonlite::fromJSON(index)
+    for (path in unique(entries$path)) {
+      relative <- if (startsWith(path, prefix)) substring(path, nchar(prefix) + 1L) else path
+      if (!file.exists(file.path(root, language, relative))) {
+        failures <- c(failures, paste(index, "-> invalid search destination", path))
+      }
+    }
   }
 }
 if (length(failures)) stop(paste(unique(failures), collapse = "\n"))

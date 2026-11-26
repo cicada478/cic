@@ -1,6 +1,29 @@
 # Resolve each language link at build time, including without JavaScript.
 localize_site <- function(root, base_url) {
   root <- normalizePath(root, winslash = "/", mustWork = TRUE)
+  for (language in c("", "en")) {
+    prefix <- paste0(base_url, "/", if (language == "en") "en/" else "")
+    index_path <- file.path(root, language, "search.json")
+    entries <- jsonlite::fromJSON(index_path, simplifyVector = FALSE)
+    entries <- Filter(function(entry) is.character(entry$path) &&
+                        length(entry$path) == 1L && nzchar(entry$path), entries)
+    for (i in seq_along(entries)) {
+      if (endsWith(base_url, "/dev")) {
+        entries[[i]]$path <- sub(paste0(prefix, "dev/"), prefix, entries[[i]]$path, fixed = TRUE)
+      }
+      if (language == "") {
+        categories <- c("Articles" = "使用教程", "Reference" = "函数参考", "Changelog" = "更新记录")
+        category <- entries[[i]]$dir
+        if (!is.null(category) && category %in% names(categories)) entries[[i]]$dir <- categories[[category]]
+      }
+    }
+    jsonlite::write_json(entries, index_path, auto_unbox = TRUE)
+    sitemap_path <- file.path(root, language, "sitemap.xml")
+    if (file.exists(sitemap_path) && endsWith(base_url, "/dev")) {
+      sitemap <- readLines(sitemap_path, encoding = "UTF-8", warn = FALSE)
+      writeLines(gsub(paste0(prefix, "dev/"), prefix, sitemap, fixed = TRUE), sitemap_path, useBytes = TRUE)
+    }
+  }
   files <- list.files(root, "\\.html$", recursive = TRUE, full.names = TRUE)
   for (file in files) {
     relative <- substring(file, nchar(root) + 2L)
