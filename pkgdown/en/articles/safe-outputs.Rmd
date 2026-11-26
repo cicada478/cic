@@ -1,0 +1,98 @@
+---
+title: "Safe analysis outputs"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Safe analysis outputs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(cic)
+```
+
+## Start with a marker table
+
+`out()` allocates a path; a writing function saves the contents. The examples run in a temporary directory, leave existing analysis results unchanged, and require neither Seurat nor real sequencing data.
+
+```{r first-output}
+result_dir <- tempfile("cic-guide-")
+dir.create(result_dir)
+markers <- data.frame(cell_type = c("T_cell", "B_cell"),
+                      gene = c("CD3D", "MS4A1"))
+path <- out("markers", ext = "csv", tag = "reviewed", dir = result_dir)
+write.csv(markers, path, row.names = FALSE)
+basename(path)
+file.exists(path)
+```
+
+The name resembles `markers_reviewed_YYYYMMDD.csv`, using the date on which the example runs. In a real project, replace `result_dir` with your results directory.
+
+## Handle existing filenames
+
+The default `conflict = "ask"` presents a menu in interactive R and uses automatic numbering in non-interactive sessions. The example explicitly selects `"increment"` so it can run unattended:
+
+```{r collision}
+second <- out("markers", ext = "csv", tag = "reviewed", dir = result_dir,
+              conflict = "increment")
+write.csv(markers, second, row.names = FALSE)
+basename(second)
+stopifnot(path != second, file.exists(path), file.exists(second))
+```
+
+| Setting | Behaviour |
+|---|---|
+| `conflict = "ask"` | Default protection: interactive choice, automatic numbering in batch runs |
+| `conflict = "increment"` | Choose an unused name ending in `_1`, `_2`, etc. |
+| `conflict = "error"` | Stop on a collision so the calling workflow must handle it |
+| `conflict = "overwrite"` | Explicitly allow the subsequent writer to overwrite the destination |
+
+Use `timestamp = FALSE` to omit the date. `tag` accepts multiple tags; `ext` accepts an extension with or without a leading dot. A different existing extension raises an error instead of being silently replaced.
+
+## Inspect logs {#logs}
+
+```{r logs}
+outputs(result_dir)[, c("action", "exists")]
+outputs(result_dir, existing = TRUE, n = 1)[, c("action", "exists")]
+```
+
+The `.cic_outputs.csv` log is written when the path is allocated. This example allocates a path without saving data:
+
+```{r pending}
+pending <- out("not-written.rds", dir = result_dir, timestamp = FALSE)
+outputs(result_dir, existing = FALSE)[, c("action", "exists")]
+```
+
+`exists = FALSE` can also mean that writing failed or a file was later deleted; it does not by itself prove a function failed. Logs contain `time, file, requested, action, script`, in that order. Existing non-empty logs are checked before appending. Malformed or incompatible logs raise an error; do not use an ordinary data CSV as a log file.
+
+Disable logging per call with `log = FALSE`, or per project with `options(cic.out.log = FALSE)`. Logs contain absolute paths and possibly script names; review them before public sharing. `out()` does not provide a cross-process file lock.
+
+## Save plots {#plots}
+
+```{r plot, fig.show='hide'}
+p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+figure <- ggsave1(file.path(result_dir, "scatter.pdf"), p, width = 5, height = 4)
+stopifnot(file.exists(figure))
+```
+
+`ggsave1()` uses `out()` for path allocation and logging while retaining its existing arguments. `add_date = FALSE` omits the date; `confirm = FALSE` explicitly allows overwriting. These two arguments determine timestamp and collision handling independently of `cic.out.timestamp` and `cic.out.conflict`. Directory and logging options still apply.
+
+## Configure a project
+
+```{r project-options}
+local({
+  old <- options(cic.out.dir = result_dir, cic.out.timestamp = "%Y%m%d",
+                 cic.out.conflict = "increment", cic.out.log = TRUE)
+  on.exit(options(old))
+  path <- out("summary.rds")
+  saveRDS(markers, path)
+  stopifnot(file.exists(path))
+})
+```
+
+Explicit `out()` arguments override their corresponding options. Absolute paths are not relocated by `dir` or `cic.out.dir`. `create_dir = FALSE` requires the parent directory to exist. `outputs()` reads `cic.out.dir` by default, or the working directory when that option is unset; pass other directories explicitly. See `?out`, `?outputs` and `?ggsave1` for complete parameter documentation.
+
+```{r cleanup, include=FALSE}
+unlink(result_dir, recursive = TRUE)
+```

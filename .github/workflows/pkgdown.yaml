@@ -8,6 +8,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      refresh_stable_docs:
+        description: Refresh documentation for the latest stable release (code must match)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -19,15 +24,17 @@ jobs:
       contents: read
       pages: read
     env:
-      DOCS_CHANNEL: ${{ github.event_name == 'release' && !github.event.release.prerelease && !github.event.release.draft && github.repository == 'cicada478/cic' && 'release' || 'development' }}
+      DOCS_CHANNEL: ${{ github.repository == 'cicada478/cic' && ((github.event_name == 'release' && !github.event.release.prerelease && !github.event.release.draft) || (github.event_name == 'workflow_dispatch' && inputs.refresh_stable_docs && github.ref == 'refs/heads/main')) && 'release' || 'development' }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     outputs:
       channel: ${{ steps.channel.outputs.value }}
+      release_tag: ${{ steps.channel.outputs.release_tag }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.release.tag_name || github.ref }}
           persist-credentials: false
+          fetch-depth: 0
       - name: Select channel and verify latest release
         id: channel
         env:
@@ -36,7 +43,14 @@ jobs:
         run: |
           if [ "$DOCS_CHANNEL" = "release" ]; then
             latest=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
-            test "$latest" = "$RELEASE_TAG"
+            if [ "$GITHUB_EVENT_NAME" = "release" ]; then
+              test "$latest" = "$RELEASE_TAG"
+            else
+              # A documentation refresh may not publish unreleased package code.
+              git diff --exit-code "$latest" -- DESCRIPTION NAMESPACE R inst/list-edit
+            fi
+            echo "DOCS_RELEASE_TAG=$latest" >> "$GITHUB_ENV"
+            echo "release_tag=$latest" >> "$GITHUB_OUTPUT"
           fi
           echo "value=$DOCS_CHANNEL" >> "$GITHUB_OUTPUT"
       - uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
@@ -97,7 +111,7 @@ jobs:
       - name: Recheck latest release before deployment
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ needs.build.outputs.release_tag }}
         run: |
           latest=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
           test "$latest" = "$RELEASE_TAG"

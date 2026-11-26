@@ -1,0 +1,120 @@
+---
+title: "Create gene lists and cell orders"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Create gene lists and cell orders}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## Open an empty list
+
+Run editor calls manually in interactive R; documentation builds do not open windows. Install the optional packages `shiny` and `jsonlite` first. Only RStudio dialog mode also needs `rstudioapi`.
+
+```{r open, eval=FALSE}
+cell_order <- cic::list_edit()
+```
+
+1. Give the column a useful title, such as `cell_order`.
+2. Enter `T_cell`, `B_cell` and `Myeloid` on separate rows, or paste three lines of text.
+3. Drag the handle beside an item, or use the up/down buttons to reorder it.
+4. Click **Done & return** to finish editing and receive a character vector in R.
+
+For example, the resulting order might be:
+
+```{r vector-result}
+cell_order <- c("T_cell", "B_cell", "Myeloid")
+cell_order
+factor(c("Myeloid", "T_cell"), levels = cell_order)
+```
+
+The `c(...)` expression illustrates the returned object; you do not type quotes or commas in the editor. A single column's title does not become a name on the returned vector. These instructions describe usage, not a completed automated UI acceptance test.
+
+## Multiple marker-gene sets
+
+```{r groups, eval=FALSE}
+markers <- cic::list_edit()
+```
+
+Click **Add column** and enter columns titled `T_cell` and `B_cell`:
+
+| T_cell | B_cell |
+|---|---|
+| CD3D | MS4A1 |
+| CD3E | CD79A |
+| TRAC | |
+
+The returned object is equivalent to:
+
+```{r list-result}
+markers <- list(T_cell = c("CD3D", "CD3E", "TRAC"),
+                B_cell = c("MS4A1", "CD79A"))
+markers$T_cell
+```
+
+Item reordering affects only its own column. Drag a header handle to move a whole column. Columns can have unequal lengths. Cross-column dragging and linked movement of paired rows, such as cell types and colours, are unsupported.
+
+## Automatic or fixed return type
+
+| Setting | Result on completion |
+|---|---|
+| `output = "auto"` (default) | One column returns a character vector; multiple columns return a named list |
+| `output = "list"` | Always return a named list, including for one column |
+| `output = "vector"` | Require one column and disable adding columns; multiple input columns raise an error |
+
+Empty columns count. An empty single column in auto mode returns `character(0)`; multiple empty columns remain empty vectors in a list. If downstream code always uses `markers$T_cell`, choose a fixed list result:
+
+```{r fixed-type, eval=FALSE}
+markers <- cic::list_edit(markers, output = "list")
+genes <- cic::list_edit(output = "vector")
+```
+
+Column names must be non-blank and unique. Blank/whitespace-only cells and R missing values are omitted. Other whitespace, case, duplicates, order and the text `001` and `NA` are preserved. Formula-like input is not executed. Names on individual vector elements are discarded.
+
+## Choose a window
+
+| Setting | Where the editor opens |
+|---|---|
+| `viewer = "auto"` (default) | Prefer an existing Edge/Chrome standalone window on Windows; otherwise use the default browser |
+| `viewer = "window"` | As above, with a message when no supported executable is found and the browser is used instead |
+| `viewer = "browser"` | Default browser, possibly in a tab |
+| `viewer = "dialog"` | RStudio dialog; requires rstudioapi and retains the host's movement and resize restrictions |
+
+Standalone windows support native movement, resizing and maximization; they are not guaranteed to stay on top. Editing occupies the R session. It is not a background app that synchronizes while other R code runs.
+
+```{r viewers, eval=FALSE}
+cell_order <- cic::list_edit(viewer = "browser")
+# Run only in RStudio:
+cell_order <- cic::list_edit(viewer = "dialog")
+```
+
+## Keyboard shortcuts and records
+
+| Action | Effect |
+|---|---|
+| `Enter` / `Shift + Enter` | Next / previous item in this column |
+| `Tab` / `Shift + Tab` | Next / previous column, wrapping at the boundary |
+| `Alt + Up` / `Alt + Down` | Move the current item up / down |
+| `Esc` | Move from a cell to the toolbar |
+| **Undo / Redo** | Undo / redo changes, including deleted columns |
+
+**Export CSV** downloads UTF-8 text, padding shorter columns with empty cells. It does not automatically overwrite the input CSV.
+
+```{r reopen, eval=FALSE}
+markers <- cic::list_edit(file = "markers.csv", output = "list")
+markers <- cic::list_edit(file = "markers.tsv", output = "list")
+```
+
+`file` uses `data.table::fread()` to detect CSV, TSV, semicolon-separated and other delimited UTF-8 text, including a BOM. The first non-empty row must contain column names. All columns are read as text, preserving `001`, literal `NA` and whitespace around non-blank values. Quote values containing separators or double quotes; double embedded quotes. Names must be non-blank and unique. Parser warnings become errors instead of accepting partial input. Excel and RDS or other binary formats cannot be imported directly. Export remains CSV.
+
+Do not supply both `x` and `file`. **R code** displays an expression equivalent to the returned object. Copy it into a script and prefix it with `markers <-` for non-interactive reuse. If automatic clipboard access is unavailable, select the text and press `Ctrl + C`.
+
+**Cancel** aborts assignment and preserves an existing variable. Closing the window also cancels, after disconnection is detected. Exporting CSV or viewing code does not commit the R object: click **Done & return** to finish.
+
+## Acknowledgement
+
+Toolbar, completion/cancellation and export concepts were inspired by [Dillon Hammill's DataEditR](https://github.com/DillonHammill/DataEditR). cic implements the editor independently and bundles no DataEditR source code.

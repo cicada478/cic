@@ -13,15 +13,19 @@ repo:
 navbar:
   structure:
     left: [intro, reference, articles, news]
-    right: [search, github]
+    right: [search, github, language]
+  components:
+    language:
+      text: English
+      href: en/index.html
 reference:
-  - title: 输出管理 / Output management
+  - title: 输出管理
     contents: [out, outputs]
-  - title: 绘图保存 / Plot export
+  - title: 绘图保存
     contents: [ggsave1]
-  - title: 列表编辑 / List editing
+  - title: 列表编辑
     contents: [list_edit]
 articles:
-  - title: 使用教程 / Guides
+  - title: 使用教程
     navbar: ~
     contents: [safe-outputs, list-editor]

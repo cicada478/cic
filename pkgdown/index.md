@@ -25,8 +25,6 @@ cell_order <- cic::list_edit()
 
 完整参数与返回值见函数参考，变更见 [更新记录](news/index.html)。安装方式见 [仓库 README](https://github.com/cicada478/cic#readme)，正式版本与源代码包见 [GitHub Releases](https://github.com/cicada478/cic/releases)。
 
-## English
+## 设计参考
 
-cic provides output-path allocation, output logs, plot export and interactive list editing for everyday analysis. Start with [safe outputs](articles/safe-outputs.html#english) or the [list editor](articles/list-editor.html#english); both guides include English instructions. The version in the navigation bar identifies this documentation build. Development previews are separate from the release website.
-
-Workflow inspired by [DataEditR](https://github.com/DillonHammill/DataEditR). The list editor is implemented independently in cic.
+操作流程参考 [DataEditR](https://github.com/DillonHammill/DataEditR)，列表编辑器由 cic 独立实现。
